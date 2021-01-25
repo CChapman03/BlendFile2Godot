@@ -7,14 +7,14 @@ class Logger:
         self.func = func
         self.debug = True
         if self.debug:
-            self.log_file = open("../logs/Combine_Blend_Files.log", 'w')
+            self.log_file = open("../logs/BlendFile2Godot.log", 'w')
             self.log_file.write("Combine_Blend_Files Debug: \n")
             self.log_file.write("==============================================\n\n")
             self.log_file.close()
 
     def __call__(self, *args, **kwargs):
         if self.debug:
-            self.log_file = open("../logs/Combine_Blend_Files.log", 'a')
+            self.log_file = open("../logs/BlendFile2Godot.log", 'a')
             self.log_file.write("----------------------------------------------\n")
             self.log_file.write("%s : %s\n" % ("Got To Function", self.func.__name__))
             self.log_file.write("----------------------------------------------\n")
