@@ -1,8 +1,11 @@
 import bpy
 import random
 import mathutils
+import sys
 
 import os
+
+sys.path.append(os.getcwd())
 
 from math_utilities import Math_Utilities
 from tscn import TSCN
@@ -16,14 +19,16 @@ class Convert_Particles():
 
         self.tscn = TSCN()
 
-        self.blend_particle_dict = {}
+        self.blend_particle_dict = {"Emitter Objects" : {}}
 
     def deselect_all(self):
         for obj in bpy.context.scene.objects:
             obj.select_set(False)
     
-    def export_object(self, obj):
+    def export_object(self, obj, project_dir):
+
         bpy.context.scene.collection.objects.link(obj)
+
         obj.select_set(True)
 
         mat = mathutils.Matrix( [ [1, 0, 0, 0],
@@ -32,10 +37,14 @@ class Convert_Particles():
                                 [0, 0, 0, 1] ])
 
         obj.matrix_world = mat
-        bpy.ops.export_scene.obj(filepath=f"{obj.name}.obj", use_selection=True, use_triangles=True, use_normals=True)
+        bpy.ops.export_scene.obj(filepath=f"{project_dir}/{obj.name}.obj", use_selection=True, use_triangles=True, use_normals=True)
         obj.select_set(False)
 
-    def scan_objects(self):
+        bpy.context.scene.collection.objects.unlink(obj)
+
+    def convert(self, project_dir):
+
+        self.deselect_all()
 
         for obj in bpy.context.scene.objects:
 
@@ -48,7 +57,7 @@ class Convert_Particles():
                     # Get Object 3D Transform
                     obj_scale = obj.scale
                     obj_location = obj.location
-                    obj_rotation = obj.rotation.to_euler()
+                    obj_rotation = obj.rotation_euler
 
                     obj_s = self.math.S3D(obj_scale[0], obj_scale[2], obj_scale[1])
                     obj_r = self.math.R(obj_rotation[0], obj_rotation[2], obj_rotation[1])
@@ -59,7 +68,7 @@ class Convert_Particles():
                     # Other
                     obj_name = obj.name
 
-                    self.blend_particle_dict["Emitter Objects"][obj_name] = {"Transform" : obj_transform, "Particle Objects" : []}
+                    self.blend_particle_dict["Emitter Objects"][obj_name] = {"Transform" : obj_transform, "Particle Objects" : {}}
 
                     # Get Object Particle Systems
                     obj_particle_systems = obj.evaluated_get(self.depg).particle_systems
@@ -77,17 +86,22 @@ class Convert_Particles():
 
                             for particle_obj_idx, particle_obj in enumerate(particle_system_settings.instance_collection.objects):
 
-                                self.export_object(particle_obj)
+                                self.export_object(particle_obj, project_dir)
 
                                 particle_system_objects_dict[particle_system_idx + particle_obj_idx] = {"Object" : particle_obj, "Random Weight" : 1, "Scale" : particle_obj.dimensions}
 
-                        elif particle_system_settings.render_type == "OBJECT":
+                                self.blend_particle_dict["Emitter Objects"][obj_name]["Particle Objects"][particle_obj.name] = particle_system_objects_dict
 
+                        elif particle_system_settings.render_type == "OBJECT":
+                            
+                            particle_obj_idx = 0
                             particle_obj = particle_system_settings.instance_object
 
-                            self.export_object(particle_obj)
+                            self.export_object(particle_obj, project_dir)
 
                             particle_system_objects_dict[particle_system_idx + particle_obj_idx] = {"Object" : particle_obj, "Random Weight" : 1, "Scale" : particle_obj.dimensions}
+
+                            self.blend_particle_dict["Emitter Objects"][obj_name]["Particle Objects"][particle_obj.name] = particle_system_objects_dict
 
                         particle_indices = []
                         particle_index_weights = []
@@ -112,11 +126,11 @@ class Convert_Particles():
                             particle_loc = particle.location
                             particle_rot = particle.rotation.to_euler()
 
-                            particle_r = self.math.R(particle_rot[0], particle_rot[2], particle_rot[1])
+                            particle_r = self.math.Ry(particle_rot[2])
                             particle_s = self.math.S3D(particle.size * particle_obj_scale[0],
                                                        particle.size * particle_obj_scale[2],
                                                        particle.size * particle_obj_scale[1])
-                            particle_t = self.math.T(particle_loc[0], particle_loc[2], particle_loc[1])
+                            particle_t = self.math.T(particle_loc[0], 0.0, particle_loc[1])
 
                             particle_transform = self.math.to_str(self.math.transform(particle_r,
                                                                                       particle_s, 
@@ -133,8 +147,8 @@ class Convert_Particles():
                             
                             sub_res_properties = {}
                             sub_res_properties["transform_format"] = 1
-                            sub_res_properties["instance_count"] = len(val) / 12
-                            sub_res_properties["mesh"] = f"ExtResource( {particle_system_idx + k} )"
+                            sub_res_properties["instance_count"] = int(len(val) / 12)
+                            sub_res_properties["mesh"] = f"ExtResource( {particle_system_idx + k + 1} )"
                             sub_res_properties["transform_array"] = f"PoolVector3Array( {', '.join(val)} )"
 
                             self.tscn.add_sub_resource(res_type="MultiMesh", res_properties=sub_res_properties)
@@ -156,11 +170,18 @@ class Convert_Particles():
 
             self.tscn.add_node(node_name=ob_name, node_type="Spatial", node_parent=".", node_properties=node_properties)
 
-            for i, part_ob in enumerate(ob_particle_objects):
+            print(ob_particle_objects)
+
+            i = 0
+            for k, v in ob_particle_objects.items():
 
                 part_node_properties = {}
                 part_node_properties['multimesh'] = f"SubResource( {current_obj + i} )"
 
-                self.tscn.add_node(node_name=part_ob.name, node_type="MultiMeshInstance", node_parent=ob_name, node_properties=part_node_properties)
+                part_ob_name = k
+                
+                self.tscn.add_node(node_name=part_ob_name, node_type="MultiMeshInstance", node_parent=ob_name, node_properties=part_node_properties)
 
-        self.tscn.write("test.tscn")
+                i += 1
+
+        self.tscn.write(f"{project_dir}/test.tscn")

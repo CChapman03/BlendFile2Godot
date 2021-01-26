@@ -32,10 +32,11 @@ class TSCN():
             tscn_file.write(f"[gd_scene load_steps={self.load_steps} format={self.format}]\n\n")
             
             for key, val in self.ext_resources.items():
-                tscn_file.write(f"[ext_resource path=\"{val['Path']}\" type=\"{val['Type']}\" id={key}]\n")
+                tscn_file.write(f"[ext_resource path=\"{val['Path']}\" type=\"{val['Type']}\" id={key + 1}]\n")
+            tscn_file.write('\n')
 
             for key, val in self.sub_resources.items():
-                tscn_file.write(f"[sub_resource type=\"{val['Type']}\" id={key}]\n")
+                tscn_file.write(f"[sub_resource type=\"{val['Type']}\" id={key + 1}]\n")
                 for p_key, p_val in val['Properties'].items():
                     tscn_file.write(f"{p_key} = {p_val}\n")
                 tscn_file.write("\n")
@@ -51,3 +52,5 @@ class TSCN():
                     for p_key, p_val in val['Properties'].items():
                         tscn_file.write(f"{p_key} = {p_val}\n")
                     tscn_file.write("\n")
+
+                tscn_file.write('\n')
