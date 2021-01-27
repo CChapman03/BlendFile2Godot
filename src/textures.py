@@ -12,11 +12,16 @@ class Textures():
 
     def __init__(self):
 
-        pass
+        self.textures = []
 
-    def copy_textures(self, project_dir):
+    def get_textures(self, project_dir):
         
         for img in bpy.data.images:
-            print(img.filepath_raw)
+            filename = img.filepath_raw.replace("../", "").replace("//", "/")
+            
+            if filename != "":
+                print(f"{project_dir}/{os.path.basename(filename)}")
 
-            shutil.copyfile(os.path.abspath(img.filepath), f"{project_dir}/{os.path.basename(img.filepath)}")
+                self.textures += [f"{os.path.basename(filename)}"]
+
+                shutil.copyfile(filename, f"{project_dir}/{os.path.basename(filename)}")
