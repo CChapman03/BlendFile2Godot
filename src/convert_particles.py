@@ -170,7 +170,7 @@ class Convert_Particles():
 
             self.tscn.add_node(node_name=ob_name, node_type="Spatial", node_parent=".", node_properties=node_properties)
 
-            print(ob_particle_objects)
+            #print(ob_particle_objects)
 
             i = 0
             for k, v in ob_particle_objects.items():
