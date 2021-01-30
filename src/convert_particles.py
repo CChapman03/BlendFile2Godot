@@ -9,6 +9,7 @@ sys.path.append(os.getcwd())
 
 from math_utilities import Math_Utilities
 from tscn import TSCN
+from materials import Material
 
 class Convert_Particles():
 
@@ -18,6 +19,9 @@ class Convert_Particles():
         self.blend_filename = os.path.basename(bpy.data.filepath)
 
         self.tscn = TSCN()
+
+        self.material = Material()
+        self.material_indices = {}
 
         self.blend_particle_dict = {"Emitter Objects" : {}}
 
@@ -43,8 +47,12 @@ class Convert_Particles():
         bpy.context.scene.collection.objects.unlink(obj)
 
     def convert(self, project_dir):
+        
+        self.material.get_all_objects_materials(project_dir)
 
         self.deselect_all()
+
+        temp_objects = []
 
         for obj in bpy.context.scene.objects:
 
@@ -107,8 +115,16 @@ class Convert_Particles():
                         particle_index_weights = []
 
                         for key, val in particle_system_objects_dict.items():
+                            
+                            if not val['Object'].name in temp_objects:
 
-                            self.tscn.add_ext_resource(f"{val['Object'].name}.obj", "ArrayMesh")
+                                self.tscn.add_ext_resource(f"{val['Object'].name}.obj", "ArrayMesh")
+                            
+                                # ob_material = [mk for mk, mv in self.material.materials_dict.items() if mv["Object"] == val['Object'].name]
+                                # if len(ob_material) > 0:
+                                #     self.tscn.add_ext_resource(f"{ob_material[0]}.tres", "Material")
+
+                                temp_objects += [val['Object'].name]
 
                             particle_indices += [key]
                             particle_index_weights += [val['Random Weight']]
@@ -137,8 +153,8 @@ class Convert_Particles():
                                                                                       particle_t))
 
                             if not particle_obj_id in particle_transforms_dict:
-                                particle_transforms_dict[particle_obj_id] = []
-                                particle_transforms_dict[particle_obj_id] += particle_transform
+                                #particle_transforms_dict[particle_obj_id] = []
+                                particle_transforms_dict[particle_obj_id] = particle_transform
                             else:
                                 particle_transforms_dict[particle_obj_id] += particle_transform
 
@@ -155,9 +171,16 @@ class Convert_Particles():
 
                             k += 1
 
+
                     break
+                                    
+            ob_material = [mk for mk, mv in self.material.materials_dict.items() if mv["Object"] == obj.name]
+            if len(ob_material) > 0:
+                self.tscn.add_ext_resource(f"{ob_material[0]}.tres", "Material")
 
         self.tscn.add_node(node_name=f"{os.path.splitext(self.blend_filename)[0]}", node_type="Spatial", node_parent=None, node_properties=None)
+
+        print(self.blend_particle_dict["Emitter Objects"])
 
         current_obj = 1
         for key, val in self.blend_particle_dict["Emitter Objects"].items():
@@ -165,8 +188,13 @@ class Convert_Particles():
             ob_transform = val['Transform']
             ob_particle_objects = val["Particle Objects"]
             
+            ob_materials = [mk for mk, mv in self.material.materials_dict.items() if mv["Object"] == ob_name]
+
             node_properties = {}
             node_properties["transform"] = f"Transform( {', '.join(ob_transform)} )"
+
+            ob_material_name = bpy.context.scene.objects[key].active_material.name
+            node_properties['material_override'] = f"ExtResource( {self.tscn.get_ext_resource_by_name(ob_material_name) + 1} )"
 
             self.tscn.add_node(node_name=ob_name, node_type="Spatial", node_parent=".", node_properties=node_properties)
 
@@ -178,10 +206,20 @@ class Convert_Particles():
                 part_node_properties = {}
                 part_node_properties['multimesh'] = f"SubResource( {current_obj + i} )"
 
+                print("k", k)
+
+                print(len(ob_materials))
+
+                #if len(ob_materials) > 0:
+                part_ob_material_name = bpy.context.scene.objects[k].active_material.name
+                part_node_properties['material_override'] = f"ExtResource( {self.tscn.get_ext_resource_by_name(part_ob_material_name) + 1} )"
+
                 part_ob_name = k
                 
                 self.tscn.add_node(node_name=part_ob_name, node_type="MultiMeshInstance", node_parent=ob_name, node_properties=part_node_properties)
 
                 i += 1
+
+            current_obj += 1
 
         self.tscn.write(f"{project_dir}/test.tscn")

@@ -15,5 +15,5 @@ if __name__ == "__main__":
     convert_p = Convert_Particles()
     convert_p.convert(project_dir)
 
-    material = Material()
-    material.get_all_objects_materials(project_dir)
+    # material = Material()
+    # material.get_all_objects_materials(project_dir)

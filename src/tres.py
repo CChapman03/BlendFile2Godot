@@ -17,10 +17,26 @@ class TRES():
         
         self.ext_resources[res_id] = {"Filename" : res_filename, "Type" : res_type, "Path" : res_dir + res_filename}
 
+    def get_ext_resource_by_name(self, name):
+        res_id = 0
+        for key, val in self.ext_resources.items():
+            if name in val["Filename"]:
+                res_id = int(key)
+
+        return res_id
+
     def add_resource(self, res_name, res_properties : dict):
         res_id = len(self.resources.keys())
 
         self.resources[res_id] = {"Name" : res_name, "Properties" : res_properties}
+
+    def get_resource_by_name(self, name):
+        res_id = 0
+        for key, val in self.ext_resources.items():
+            if name in val["Name"]:
+                res_id = int(key)
+
+        return res_id
 
     def write(self, filename):
 

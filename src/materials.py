@@ -123,31 +123,33 @@ class Material():
                         mat_sss_enabled = mat_subsurface != 0.0
                         mat_normal_color = ', '.join(str(x) for x in [mat_normal[0], mat_normal[1], mat_normal[2], 1.0])
 
-                        res_properties["params_use_alpha_scissor"] = mat_use_alpha_clip
+                        res_properties["params_use_alpha_scissor"] = str(mat_use_alpha_clip).lower()
                         res_properties["params_alpha_scissor_threshold"] = mat_alpha_cutout
                         res_properties["metallic_specular"] = mat_spec
-                        res_properties["normal_enabled"] = mat_normal_enabled
+                        res_properties["normal_enabled"] = str(mat_normal_enabled).lower()
                         res_properties["normal_scale"] = (mat_normal[0] + mat_normal[1] + mat_normal[2]) / 3 if not "ExtResource" in mat_normal else 1.0
                         res_properties["normal_texture"] = f"Color( {mat_normal_color} )" if not "ExtResource" in mat_normal else mat_normal
-                        res_properties["transmission_enabled"] = mat_trans_enabled
+                        res_properties["transmission_enabled"] = str(mat_trans_enabled).lower()
                         res_properties["transmission"] = f"Color( {mat_trans_color} )" if not "ExtResource" in mat_trans_color else mat_trans_color
-                        res_properties["albedo_color"] = f"Color( {', '.join(str(x) for x in list(mat_diffuse))} )" if not "ExtResource" in mat_diffuse else mat_diffuse
+                        res_properties["albedo_color"] = f"Color( {', '.join(str(x) for x in list(mat_diffuse))} )" if not "ExtResource" in mat_diffuse else f"Color( 1, 1, 1, 1 )"
+                        if "ExtResource" in mat_diffuse:
+                            res_properties["albedo_texture"] = mat_diffuse
                         res_properties["metallic"] = mat_metal
                         res_properties["roughness"] = mat_roughness
-                        res_properties["emission_enabled"] = mat_emission_enabled
+                        res_properties["emission_enabled"] = str(mat_emission_enabled).lower()
                         res_properties["emission"] = f"Color( {', '.join(str(x) for x in list(mat_emission))} )" if not "ExtResource" in mat_emission else mat_emission
                         res_properties["emission_energy"] = mat_emission_strength
                         res_properties["emission_operator"] = 0
-                        res_properties["emission_on_uv2"] = False
-                        res_properties["clearcoat_enabled"] = mat_cc_enabled
+                        res_properties["emission_on_uv2"] = "false"
+                        res_properties["clearcoat_enabled"] = str(mat_cc_enabled).lower()
                         res_properties["clearcoat"] = mat_cc
                         res_properties["clearcoat_gloss"] = mat_cc_roughness
-                        res_properties["anisotropy_enabled"] = mat_aniso_enabled
+                        res_properties["anisotropy_enabled"] = str(mat_aniso_enabled).lower()
                         res_properties["anisotropy"] = mat_aniso
-                        res_properties["subsurf_scatter_enabled"] = mat_sss_enabled
+                        res_properties["subsurf_scatter_enabled"] = str(mat_sss_enabled).lower()
                         res_properties["subsurf_scatter_strength"] = mat_subsurface
 
-                self.materials_dict[mat.name] = {"Material" : res_properties, "Textures" : mat_texs}
+                self.materials_dict[mat.name] = {"Material" : res_properties, "Textures" : mat_texs, "Object" : obj.name}
 
         for mat_name, mat_properties in self.materials_dict.items():
             

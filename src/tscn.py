@@ -25,6 +25,22 @@ class TSCN():
     def add_node(self, node_name, node_type, node_parent, node_properties : dict):
         self.nodes[len(self.nodes.keys())] = {"Name" : node_name, "Type" : node_type, "Parent" : node_parent, "Properties" : node_properties}
 
+    def get_ext_resource_by_name(self, name):
+        res_id = 0
+        for key, val in self.ext_resources.items():
+            if name in val["Filename"]:
+                res_id = int(key)
+
+        return res_id
+
+    def get_node_by_name(self, name):
+        node_id = 0
+        for key, val in self.nodes.items():
+            if name in val["Name"]:
+                node_id = int(key)
+
+        return node_id
+
     def write(self, filename):
 
         with open(filename, 'w') as tscn_file:
