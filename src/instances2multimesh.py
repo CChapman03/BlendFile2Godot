@@ -165,3 +165,5 @@ def convert():
 
     with open("out\\Test_Multimesh.tscn", 'w') as file:
         file.writelines(in_lines)
+
+convert()
