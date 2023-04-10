@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=2]
+
+[sub_resource type="BoxMesh" id=1]
+
+[sub_resource type="MultiMesh" id=2]
+transform_format = 1
+mesh = SubResource( 1 )
+instance_count = 1
+buffer = PackedFloat32Array( -0.7039, -0.383, -0.5982, 0.0, -0.262, -0.6428, 0.7198, 0.0, -0.6602, 0.6634, 0.3521, 0.0 )
+
+[node name="Main" type="Node3D"]
+
+[node name="Cubes" type="MultiMeshInstance3D" parent="."]
+multimesh = SubResource( 2 )

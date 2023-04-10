@@ -42,8 +42,14 @@ def construct_matrix(rotation_quat, rotation, location, scale):
     quat_a[1] = quat_a[3]
     quat_a[3] = rot_tmp
 
-    rot = quat_a # rotation_quat.copy()
-    # rot.rotate(quat_x)
+    rot = rotation_quat.copy()# quat_a
+    rot.rotate(quat_z)
+    
+    rot_x = rot[1]
+    rot[1] = -rot[2]
+    rot[2] = rot_x
+
+    #rot.rotate(quat_x)
     # rot.rotate(quat_y)
     # rot.rotate(quat_z)
     loc = location.copy()
@@ -56,7 +62,8 @@ def construct_matrix(rotation_quat, rotation, location, scale):
     mat_rot = rot.to_matrix()
     mat_trs = mathutils.Matrix.Translation(loc)
 
-    mat = mathutils.Matrix(mat_trs @ mat_rot.to_4x4() @ mat_sca_x @ mat_sca_y @ mat_sca_z)
+    #mat = mathutils.Matrix(mat_trs @ mat_rot.to_4x4() @ mat_sca_x @ mat_sca_y @ mat_sca_z)
+    mat = mathutils.Matrix(mat_rot.to_4x4() @ mat_sca_x @ mat_sca_y @ mat_sca_z)
     conv_mat = axis_conversion(from_forward="Y", from_up="Z", to_forward="-Z", to_up="Y")
 
     print("Constructed Matrix", mat.to_4x4())
@@ -305,6 +312,10 @@ def deselect_all():
     for obj in bpy.context.scene.objects:
         obj.select_set(False)
 
+def select_all():
+    for obj in bpy.context.scene.objects:
+        obj.select_set(True)
+
 def create_collection(collection_name):
     collection_found = False
     collection_to_use = None
@@ -368,6 +379,32 @@ def reset_object_transforms(obj):
     # deselect object
     obj.select_set(False)
 
+def apply_object_modifier(obj, mod):
+    pass
+
+def apply_instances():
+    deselect_all()
+
+    for obj in bpy.context.scene.objects:
+        for mod in obj.modifiers:
+            if mod.type == "NODES":
+                node_group = mod.node_group
+                nodes = node_group.nodes
+                links = node_group.links
+
+                realize_instances = nodes.new(type="GeometryNodeRealizeInstances")
+                output_node = nodes["Group Output"]
+                #print(output_node.inputs[0].links[0])
+                previous_node = output_node.inputs[0].links[0].from_node
+                #print(previous_node.name)
+                
+                links.new(previous_node.outputs[0], realize_instances.inputs[0])
+                links.new(realize_instances.outputs[0], output_node.inputs[0])
+
+            bpy.context.view_layer.objects.active = obj
+            bpy.ops.object.modifier_apply(modifier=mod.name)
+            #mod.modifier_apply()
+
 def export_mesh_as_obj(obj):
 
     # Deselect all objects
@@ -380,10 +417,25 @@ def export_mesh_as_obj(obj):
     new_obj.select_set(True)
 
     # export
-    bpy.ops.wm.obj_export(filepath=f"out\\res\\3d_objects\\{obj.name}", apply_modifiers=True, export_selected_objects=True, export_triangulated_mesh=True, export_pbr_extensions=True, export_uv=True, export_normals=True, export_colors=True, export_materials=True, export_material_groups=True, export_vertex_groups=True)
+    bpy.ops.wm.obj_export(filepath=f"out\\Godot4_Project\\3d_objects\\{obj.name}.obj", apply_modifiers=True, export_selected_objects=True, export_triangulated_mesh=True, export_pbr_extensions=True, export_uv=True, export_normals=True, export_colors=True, export_materials=True, export_material_groups=True, export_vertex_groups=True)
 
     # Deselect object
     new_obj.select_set(False)
+
+def export_scene_as_gltf(filepath):
+    # Deselect all objects
+    deselect_all()
+
+    # Select all visible objects 
+    for obj in bpy.context.scene.objects:
+        if obj.hide_get():
+            obj.select_set(True)
+
+    # export
+    bpy.ops.export_scene.gltf(filepath=filepath, use_visible=True, export_format="GLTF_EMBEDDED", export_texture_dir="..\\textures", export_texcoords=True, export_normals=True, export_tangents=True, export_colors=True, export_attributes=True, export_cameras=True, export_animations=True, export_lights=True)
+
+    # Deselect all objects
+    deselect_all()
 
 def create_blender_image(img_name, img_width, img_height):
      # Create blank image

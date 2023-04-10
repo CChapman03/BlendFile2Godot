@@ -1,0 +1,21 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://bgnvv2ccyadjw"
+path="res://.godot/imported/Monkey.obj-bcf1aba7399646e7e7bac63b9e07545c.mesh"
+
+[deps]
+
+files=["res://.godot/imported/Monkey.obj-bcf1aba7399646e7e7bac63b9e07545c.mesh"]
+
+source_file="res://3d_objects/Monkey.obj"
+dest_files=["res://.godot/imported/Monkey.obj-bcf1aba7399646e7e7bac63b9e07545c.mesh", "res://.godot/imported/Monkey.obj-bcf1aba7399646e7e7bac63b9e07545c.mesh"]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+optimize_mesh=true
